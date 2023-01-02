@@ -60,7 +60,7 @@ Figure.3将这种想法扩展，每个序数是4的倍数的节点都有一个�
 struct Node {
   SKIP_LIST_KEY_TYPE    key;
   SKIP_LIST_VALUE_TYPE  value;
-  struct Node          *forwards[];
+  struct Node          *forwards[]; // flexible array member
 };
 
 struct SkipList {
@@ -241,6 +241,143 @@ int SkipListRandomLevel() {
 经过分析得出，跳跃表在级别$L$上期望的节点数量是$\frac{1}{p}$，当$L=log_{\frac{1}{p}}n$时这是成立的[1]。在此可以定义$L(n)$来代表$log_{\frac{1}{p}}n$。
 
 由于级别可以安全地限定在$L(n)$，可以选择$MaxLevel=L(N)$（$N$是跳跃表中元素数量的上限）。如果$p=\frac{1}{2}$，那么$MaxLevel=32$就可以安全地包含最多$2^{32}$个元素。
+
+## 扩展
+
+### 快速随机访问
+
+在跳跃表中通过前向引用实现了$O(log_\frac{1}{p}n)$时间复杂度的搜索、插入与删除算法，但是对于随机访问数组中第$i$个元素操作仍需要$O(i)$时间。通过观察Figure.7中的Z字形搜索路径，不难发现，从头节点到某个节点的路径中所有前向指针的跨度的和，就是这个节点在跳跃表中的位置。那么通过在前向指针中维护当前节点到目标节点的跨度，就可以保证随机访问的时间复杂度也是$O(log_\frac{1}{p}n)$。
+
+首先，需要对数据结构重新进行定义，在前向指针中增加跨度相关的记录，并将其初始设置为0。此外，可以认为`NULL`在跳跃表中的位置永远是跳跃表的长度（从`0`开始），因此需要在跳跃表中记录总长度。
+```c
+#define SKIP_LIST_KEY_TYPE     int
+#define SKIP_LIST_VALUE_TYPE   int
+#define SKIP_LIST_MAX_LEVEL    32
+#define SKIP_LIST_P            0.5
+
+struct Node; // forward definition
+
+struct Forward {
+  struct Node *forward;
+  int          span;
+}
+
+struct Node {
+  SKIP_LIST_KEY_TYPE    key;
+  SKIP_LIST_VALUE_TYPE  value;
+  struct Forward        forwards[]; // flexible array member
+};
+
+struct SkipList {
+  struct Node *head;
+  int          level;
+  int          length;
+};
+
+struct Node *CreateNode(int level) {
+  struct Node *node;
+  assert(level > 0);
+  node = malloc(sizeof(struct Node) + sizeof(struct Forward) * level);
+  return node;
+}
+
+struct SkipList *CreateSkipList() {
+  struct SkipList *list;
+  struct Node     *head;
+  int              i;
+  list = malloc(sizeof(struct SkipList));
+  head = CreateNode(SKIP_LIST_MAX_LEVEL);
+  for (i = 0; i < SKIP_LIST_MAX_LEVEL; i++) {
+    head->forwards[i].forward = NULL;
+    head->forwards[i].span = 0;
+  }
+  list->head = head;
+  list->level = 1;
+  return list;
+}
+```
+
+接下来需要修改插入和删除操作，来保证在跳跃表修改后跨度的数据完整性。
+
+需要注意的是，在插入过程中需要使用`indices`记录在每个层级遍历到的最后一个元素的位置，这样通过做简单的减法操作就可以知道每个层级遍历到的最后一个元素到新插入节点的跨度。
+```c
+struct Node *SkipListInsert(struct SkipList *list, SKIP_LIST_KEY_TYPE key, SKIP_LIST_VALUE_TYPE value) {
+  struct Node *update[SKIP_LIST_MAX_LEVEL];
+  struct Node *current;
+  int          indices[SKIP_LIST_MAX_LEVEL];
+  int          i;
+  int          level;
+  current = list->head;
+  for (i = list->level - 1; i >= 0; i--) {
+    if (i == list->level - 1) {
+      indices[i] = 0;
+    } else {
+      indices[i] = indices[i + 1];
+    }
+    while (current->forwards[i].forward && current->forwards[i].forward->key < target) {
+      indices[i] += current->forwards[i].span;
+      current = current->forwards[i].forward;
+    }
+    update[i] = current;
+  }
+  current = current->forwards[0].forward;
+  if (current->key == target) {
+    current->value = value;
+    return current;
+  }
+  level = SkipListRandomLevel();
+  if (level > list->level) {
+    for (i = list->level; i < level; i++) {
+      indices[i] = 0;
+      update[i] = list->header;
+      update[i]->forwards[i].span = list->length;
+    }
+  }
+  current = CreateNode(level);
+  current->key = key;
+  current->value = value;
+  for (i = 0; i < level; i++) {
+    current->forwards[i].forward = update[i]->forwards[i].forward;
+    update[i]->forwards[i].forward = current;
+    current->forwards[i].span = update[i]->forwards[i].span - (indices[0] - indices[i]);
+    update[i]->forwards[i].span = (indices[0] - indices[i]) + 1;
+  }
+  list.length++;
+  return current;
+}
+```
+
+```c
+struct Node *SkipListDelete(struct SkipList *list, SKIP_LIST_KEY_TYPE key) {
+  struct Node *update[SKIP_LIST_MAX_LEVEL];
+  struct Node *current;
+  int          i;
+  current = list->head;
+  for (i = list->level - 1; i >= 0; i--) {
+    while (current->forwards[i].forward && current->forwards[i].forward->key < key) {
+      current = current->forwards[i].forward;
+    }
+    update[i] = current;
+  }
+  current = current->forwards[0].forward;
+  if (current && current->key == key) {
+    for (i = 0; i < list->level; i++) {
+      if (update[i]->forwards[i].forward == current) {
+        update[i]->forwards[i].forward = current->forwards[i];
+        update[i]->forwards[i].span += current->forwards[i].span - 1;
+      } else {
+        break;
+      }
+    }
+    while (list->level > 1 && list->head->forwards[list->level - 1] == NULL) {
+      list->level--;
+    }
+  }
+  return current;
+}
+```
+
+当实现了快速随机访问之后，通过简单的指针操作即可实现区间查询功能。
 
 ## 参考文献
 
