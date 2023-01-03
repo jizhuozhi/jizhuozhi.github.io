@@ -314,6 +314,8 @@ struct SkipList *CreateSkipList() {
 接下来需要修改插入和删除操作，来保证在跳跃表修改后跨度的数据完整性。
 
 需要注意的是，在插入过程中需要使用`indices`记录在每个层级遍历到的最后一个元素的位置，这样通过做简单的减法操作就可以知道每个层级遍历到的最后一个元素到新插入节点的跨度。
+
+以下代码参考自Redis的跳跃表实现[6], 为了与前面的代码风格保持一致，进行了适当的修改
 ```c
 struct Node *SkipListInsert(struct SkipList *list, SKIP_LIST_KEY_TYPE key, SKIP_LIST_VALUE_TYPE value) {
   struct Node *update[SKIP_LIST_MAX_LEVEL];
@@ -400,3 +402,4 @@ struct Node *SkipListDelete(struct SkipList *list, SKIP_LIST_KEY_TYPE key) {
 3. Aragon, Cecilia & Seidel, Raimund. (1989). Randomized Search Trees. 540-545. 10.1109/SFCS.1989.63531. 
 4. Wikipedia contributors. (2022b, November 22). *Finger search*. Wikipedia. https://en.wikipedia.org/wiki/Finger_search
 5. Wikipedia contributors. (2022a, October 24). *Threaded binary tree*. Wikipedia. https://en.wikipedia.org/wiki/Threaded_binary_tree
+6. Redis contributors. *Redis ordered set implementation*. GitHub. https://github.com/redis/redis 
