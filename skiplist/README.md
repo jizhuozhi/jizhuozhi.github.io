@@ -26,7 +26,7 @@ Figure.3将这种想法扩展，每个序数是4的倍数的节点都有一个�
 
 <figure><img src="./Figure_3.svg" stype="width:100%"/><figcaption align = "center">Figure.3 Linked List with fingers to the 4th forward elements</figcaption></figure>
 
-这种跳跃幅度的一般情况如Figure.4所示。每个$2^i$节点就有一个指针指向下一个$2^i$节点，前向指针的间隔最大为$N/2$。可以证明总的指针最大不会超过$2N$，但现在在一次查找中最多考查$\lceil logN\rceil$个节点。这意味着一次查找中总的时间消耗为$O(logN)$，也就是说在这种数据结构中的查找基本等同于二分查找（binary search）。
+这种跳跃幅度的一般情况如Figure.4所示。每个$2^i$节点就有一个指针指向下一个$2^i$节点，前向指针的间隔最大为$N/2$。可以证明总的指针最大不会超过$2N$（见[空间复杂度分析](#空间复杂度分析)），但现在在一次查找中最多考查$\lceil logN\rceil$个节点。这意味着一次查找中总的时间消耗为$O(logN)$，也就是说在这种数据结构中的查找基本等同于二分查找（binary search）。
 
 <figure><img src="./Figure_4.svg" stype="width:100%"/><figcaption align = "center">Figure.4 Linked List with fingers to the 2<sup>i</sup>th forward elements</figcaption></figure>
 
