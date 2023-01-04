@@ -3,14 +3,14 @@
 * TOC
 {:toc}
 
-跳跃表[1,2]是一种用于在大多数应用程序中取代平衡树的概率数据结构。跳跃表拥有与平衡树相同的期望时间上界，并且更简单、更快、是用更少的空间。在查找与列表的线性操作上，比平衡树更快，并且更简单。
+跳跃表[1,2,3]是一种用于在大多数应用程序中取代平衡树的概率数据结构。跳跃表拥有与平衡树相同的期望时间上界，并且更简单、更快、是用更少的空间。在查找与列表的线性操作上，比平衡树更快，并且更简单。
 
-概率平衡也可以被用在基于树的数据结构[3]上，例如树堆（Treap）。与平衡二叉树相同，跳跃表也实现了以下两种操作
+概率平衡也可以被用在基于树的数据结构[4]上，例如树堆（Treap）。与平衡二叉树相同，跳跃表也实现了以下两种操作
 
-1. 通过搜索引用[4]，可以保证从任意元素开始，搜索到在列表中间隔为$k$的元素的任意期望时间是$O(log k)$
+1. 通过搜索引用[5]，可以保证从任意元素开始，搜索到在列表中间隔为$k$的元素的任意期望时间是$O(log k)$
 2. 实现线性表的常规操作（例如*将元素插入到列表第k个元素后面*）
 
-这几种操作在平衡树中也可以实现，但是在跳跃表中实现起来更简单而且非常的快，并且通常情况下很难在平衡树中直接实现（树的线索化可以实现与链表相同的效果，但是这使得实现变得更加复杂[5]）
+这几种操作在平衡树中也可以实现，但是在跳跃表中实现起来更简单而且非常的快，并且通常情况下很难在平衡树中直接实现（树的线索化可以实现与链表相同的效果，但是这使得实现变得更加复杂[6]）
 
 ## 预览
 
@@ -301,7 +301,7 @@ TODO
 
 首先，需要对数据结构重新进行定义，在前向指针中增加跨度相关的记录，并将其初始设置为0。此外，可以认为`NULL`在跳跃表中的位置永远是跳跃表的长度（从`0`开始），因此需要在跳跃表中记录总长度。
 
-本节中的代码参考自Redis的跳跃表实现[6], 为了与前面的代码风格保持一致，进行了适当的修改
+本节中的代码参考自Redis的跳跃表实现[7], 为了与前面的代码风格保持一致，进行了适当的修改
 ```c
 #define SKIP_LIST_KEY_TYPE     int
 #define SKIP_LIST_VALUE_TYPE   int
@@ -458,9 +458,10 @@ TODO
 
 ## 参考文献
 
-1.  Pugh, William. (1990). A Skip List Cookbook. 
-2. Weiss, M. A. (1996). *Data Structures and Algorithm Analysis in C (2nd Edition)* (2nd ed.). Pearson.
-3. Aragon, Cecilia & Seidel, Raimund. (1989). Randomized Search Trees. 540-545. 10.1109/SFCS.1989.63531. 
-4. Wikipedia contributors. (2022b, November 22). *Finger search*. Wikipedia. https://en.wikipedia.org/wiki/Finger_search
-5. Wikipedia contributors. (2022a, October 24). *Threaded binary tree*. Wikipedia. https://en.wikipedia.org/wiki/Threaded_binary_tree
-6. Redis contributors. *Redis ordered set implementation*. GitHub. https://github.com/redis/redis 
+1. Pugh, W. (1989). A skip list cookbook. Tech. Rep. CS-TR-2286.1, Dept. of Computer Science, Univ. of Maryland, College Park, MD [July 1989]
+2. Pugh, W. (1989). Skip lists: A probabilistic alternative to balanced trees. Lecture Notes in Computer Science, 437–449. https://doi.org/10.1007/3-540-51542-9_36
+3. Weiss, M. A. (1996). *Data Structures and Algorithm Analysis in C (2nd Edition)* (2nd ed.). Pearson.
+4. Aragon, Cecilia & Seidel, Raimund. (1989). Randomized Search Trees. 540-545. 10.1109/SFCS.1989.63531. 
+5. Wikipedia contributors. (2022b, November 22). *Finger search*. Wikipedia. https://en.wikipedia.org/wiki/Finger_search
+6. Wikipedia contributors. (2022a, October 24). *Threaded binary tree*. Wikipedia. https://en.wikipedia.org/wiki/Threaded_binary_tree
+7. Redis contributors. *Redis ordered set implementation*. GitHub. https://github.com/redis/redis 
