@@ -447,6 +447,10 @@ struct Node *SkipListDelete(struct SkipList *list, SKIP_LIST_KEY_TYPE key) {
 
 当实现了快速随机访问之后，通过简单的指针操作即可实现区间查询功能。
 
+### 确定性跳跃表
+
+TODO
+
 ### 并发安全跳跃表
 
 TODO
