@@ -82,6 +82,7 @@ struct SkipList *CreateSkipList() {
   struct SkipList *list;
   struct Node     *head;
   int              i;
+
   list = malloc(sizeof(struct SkipList));
   head = CreateNode(SKIP_LIST_MAX_LEVEL);
   for (i = 0; i < SKIP_LIST_MAX_LEVEL; i++) {
@@ -89,6 +90,7 @@ struct SkipList *CreateSkipList() {
   }
   list->head = head;
   list->level = 1;
+
   return list;
 }
 ```
@@ -109,12 +111,14 @@ struct SkipList *CreateSkipList() {
 struct Node *SkipListSearch(struct SkipList *list, SKIP_LIST_KEY_TYPE target) {
   struct Node *current;
   int          i;
+
   current = list->head;
   for (i = list->level - 1; i >= 0; i--) {
     while (current->forwards[i] && current->forwards[i]->key < target) {
       current = current->forwards[i];
     }
   }
+
   current = current->forwards[0];
   if (current->key == target) {
     return current;
@@ -142,6 +146,7 @@ struct Node *SkipListInsert(struct SkipList *list, SKIP_LIST_KEY_TYPE key, SKIP_
   struct Node *current;
   int          i;
   int          level;
+
   current = list->head;
   for (i = list->level - 1; i >= 0; i--) {
     while (current->forwards[i] && current->forwards[i]->key < target) {
@@ -149,24 +154,29 @@ struct Node *SkipListInsert(struct SkipList *list, SKIP_LIST_KEY_TYPE key, SKIP_
     }
     update[i] = current;
   }
+
   current = current->forwards[0];
   if (current->key == target) {
     current->value = value;
     return current;
   }
+
   level = SkipListRandomLevel();
   if (level > list->level) {
     for (i = list->level; i < level; i++) {
       update[i] = list->header;
     }
   }
+
   current = CreateNode(level);
   current->key = key;
   current->value = value;
+
   for (i = 0; i < level; i++) {
     current->forwards[i] = update[i]->forwards[i];
     update[i]->forwards[i] = current;
   }
+
   return current;
 }
 ```
@@ -184,6 +194,7 @@ struct Node *SkipListDelete(struct SkipList *list, SKIP_LIST_KEY_TYPE key) {
   struct Node *update[SKIP_LIST_MAX_LEVEL];
   struct Node *current;
   int          i;
+
   current = list->head;
   for (i = list->level - 1; i >= 0; i--) {
     while (current->forwards[i] && current->forwards[i]->key < key) {
@@ -191,6 +202,7 @@ struct Node *SkipListDelete(struct SkipList *list, SKIP_LIST_KEY_TYPE key) {
     }
     update[i] = current;
   }
+
   current = current->forwards[0];
   if (current && current->key == key) {
     for (i = 0; i < list->level; i++) {
@@ -200,10 +212,12 @@ struct Node *SkipListDelete(struct SkipList *list, SKIP_LIST_KEY_TYPE key) {
         break;
       }
     }
+
     while (list->level > 1 && list->head->forwards[list->level - 1] == NULL) {
       list->level--;
     }
   }
+
   return current;
 }
 ```
@@ -302,14 +316,17 @@ struct SkipList *CreateSkipList() {
   struct SkipList *list;
   struct Node     *head;
   int              i;
+
   list = malloc(sizeof(struct SkipList));
   head = CreateNode(SKIP_LIST_MAX_LEVEL);
   for (i = 0; i < SKIP_LIST_MAX_LEVEL; i++) {
     head->forwards[i].forward = NULL;
     head->forwards[i].span = 0;
   }
+
   list->head = head;
   list->level = 1;
+
   return list;
 }
 ```
@@ -326,6 +343,7 @@ struct Node *SkipListInsert(struct SkipList *list, SKIP_LIST_KEY_TYPE key, SKIP_
   int          indices[SKIP_LIST_MAX_LEVEL];
   int          i;
   int          level;
+
   current = list->head;
   for (i = list->level - 1; i >= 0; i--) {
     if (i == list->level - 1) {
@@ -333,17 +351,20 @@ struct Node *SkipListInsert(struct SkipList *list, SKIP_LIST_KEY_TYPE key, SKIP_
     } else {
       indices[i] = indices[i + 1];
     }
+    
     while (current->forwards[i].forward && current->forwards[i].forward->key < target) {
       indices[i] += current->forwards[i].span;
       current = current->forwards[i].forward;
     }
     update[i] = current;
   }
+
   current = current->forwards[0].forward;
   if (current->key == target) {
     current->value = value;
     return current;
   }
+
   level = SkipListRandomLevel();
   if (level > list->level) {
     for (i = list->level; i < level; i++) {
@@ -352,16 +373,20 @@ struct Node *SkipListInsert(struct SkipList *list, SKIP_LIST_KEY_TYPE key, SKIP_
       update[i]->forwards[i].span = list->length;
     }
   }
+
   current = CreateNode(level);
   current->key = key;
   current->value = value;
+
   for (i = 0; i < level; i++) {
     current->forwards[i].forward = update[i]->forwards[i].forward;
     update[i]->forwards[i].forward = current;
     current->forwards[i].span = update[i]->forwards[i].span - (indices[0] - indices[i]);
     update[i]->forwards[i].span = (indices[0] - indices[i]) + 1;
   }
+
   list.length++;
+
   return current;
 }
 ```
@@ -371,6 +396,7 @@ struct Node *SkipListDelete(struct SkipList *list, SKIP_LIST_KEY_TYPE key) {
   struct Node *update[SKIP_LIST_MAX_LEVEL];
   struct Node *current;
   int          i;
+
   current = list->head;
   for (i = list->level - 1; i >= 0; i--) {
     while (current->forwards[i].forward && current->forwards[i].forward->key < key) {
@@ -378,6 +404,7 @@ struct Node *SkipListDelete(struct SkipList *list, SKIP_LIST_KEY_TYPE key) {
     }
     update[i] = current;
   }
+
   current = current->forwards[0].forward;
   if (current && current->key == key) {
     for (i = 0; i < list->level; i++) {
@@ -388,10 +415,12 @@ struct Node *SkipListDelete(struct SkipList *list, SKIP_LIST_KEY_TYPE key) {
         break;
       }
     }
+
     while (list->level > 1 && list->head->forwards[list->level - 1] == NULL) {
       list->level--;
     }
   }
+  
   return current;
 }
 ```
