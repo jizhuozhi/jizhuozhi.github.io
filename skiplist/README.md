@@ -300,6 +300,8 @@ TODO
 在跳跃表中通过前向引用实现了$O(log_\frac{1}{p}n)$时间复杂度的搜索、插入与删除算法，但是对于随机访问数组中第$i$个元素操作仍需要$O(i)$时间。通过观察Figure.7中的Z字形搜索路径，不难发现，从头节点到某个节点的路径中所有前向指针的跨度的和，就是这个节点在跳跃表中的位置。那么通过在前向指针中维护当前节点到目标节点的跨度，就可以保证随机访问的时间复杂度也是$O(log_\frac{1}{p}n)$。
 
 首先，需要对数据结构重新进行定义，在前向指针中增加跨度相关的记录，并将其初始设置为0。此外，可以认为`NULL`在跳跃表中的位置永远是跳跃表的长度（从`0`开始），因此需要在跳跃表中记录总长度。
+
+本节中的代码参考自Redis的跳跃表实现[6], 为了与前面的代码风格保持一致，进行了适当的修改
 ```c
 #define SKIP_LIST_KEY_TYPE     int
 #define SKIP_LIST_VALUE_TYPE   int
@@ -355,7 +357,6 @@ struct SkipList *CreateSkipList() {
 
 需要注意的是，在插入过程中需要使用`indices`记录在每个层级遍历到的最后一个元素的位置，这样通过做简单的减法操作就可以知道每个层级遍历到的最后一个元素到新插入节点的跨度。
 
-以下代码参考自Redis的跳跃表实现[6], 为了与前面的代码风格保持一致，进行了适当的修改
 ```c
 struct Node *SkipListInsert(struct SkipList *list, SKIP_LIST_KEY_TYPE key, SKIP_LIST_VALUE_TYPE value) {
   struct Node *update[SKIP_LIST_MAX_LEVEL];
