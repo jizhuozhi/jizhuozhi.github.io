@@ -281,7 +281,7 @@ $$
 
 ### 时间复杂度分析
 
-#### 不严谨的分析
+#### 非形式化分析
 
 延续前面的定义，*分数$p$代表节点同时带有第$i$层前向指针和第$i+1$层前向指针的概率*，也就是说相邻两个级别为$i+k (k>0)$的节点中间期望有$\frac{1}{p}-1$个级别为$i$的节点。
 
@@ -289,9 +289,63 @@ $$
 
 由搜索是通过Z字形遍历所有没有超过要寻找的目标元素的前向指针来完成的，因此搜索总是需要经过$L(n)$层。所以期望的访问次数是$\frac{1}{p}L(n)$，因为$L(n)=log_\frac{1}{p}n$，所以期望的访问次数是$\frac{1}{p}log_\frac{1}{p}n$，因为$1/p$是可以确定的常数，因此跳跃表的搜索、插入和删除的时间复杂度都是$O(log n)$
 
-#### 严谨的分析
+#### 形式化分析
 
-TODO
+定义1. $=_{prob} and \le_{prob}$ ： 定义$X$和$Y$是两个非负的无关的随机变量（通常来说，$X$和$Y$表示算法$A_X$和$A_Y$的执行时间）。定义$X\le_{prob}Y$当且仅当对于任意$t$，$t$在$X$中出现的概率总是小于$t$在$Y$中出现的概率时为真。更加形式化的定义
+$$
+X=_{prob}Y\ if\ \forall t, Prob\{X>t\}=Prob\{Y>t\}
+$$
+
+$$
+X\le_{prob}Y\ if\ \forall t, Prob\{X>t\}\le Prob\{Y>t\}
+$$
+
+定义2. 负二项分布（$NB(s, p)$）[7]）：定义$s$为一个非负整数，并且$p$是概率。$NB(s, p)$表示一个在成功概率为$p$的情况下，重复执行随机独立试验在第$s$次成功前的失败次数的随机变量。$NB(s, p)$的数学期望是$s(1-p)/p$，而方差是$s(1-p)/p^2$。
+
+延续*分数$p$代表节点同时带有第$i$层前向指针和第$i+1$层前向指针的概率*的定义，考虑反方向分析搜索路径。
+
+搜索的路径总是小于必须执行的比较的次数的。首先需要考查从级别$1$（在搜索到元素前遍历的最后一个节点）爬升到级别$L(n)$所需要反向跟踪的指针数量。虽然在搜索时可以确定每个节点的级别都是已知且确定的，在这里仍认为只有当整个搜索路径都被反向追踪后才能被确定，并且在爬升到级别$L(n)$之前都不会接触到`head`节点。
+
+在爬升过程中任何特定的点，都认为是在元素$x$的第$i$个前向指针，并且不知道元素$x$左侧所有元素的级别或元素$x$的级别，但是可以知道元素$x$的级别至少是$i$。元素$x$的级别大于$i$的概率是$p$，可以通过考虑视认为这个反向爬升的过程是一系列由成功的爬升到更高级别或失败地向左移动的随机独立实验。在爬升到级别$L(n)$过程中，向左移动的次数等于在连续随机试验中第$L(n)-1$次成功前的失败的次数，这符合负二项分布。期望的向上移动次数一定是$L(n)-1$。因此可以得到无限列表中爬升到$L(n)$的代价$C$
+$$
+C=_{prob}(L(n)-1)+NB(L(n)-1, p)
+$$
+列表长度无限大是一个悲观的假设。当反向爬升的过程中接触到`head`节点时，可以直接向上爬升而不需要任何向左移动。因此可以得到$n$个元素列表中爬升到$L(n)$的代价$C(n)$
+$$
+\begin{aligned}
+C(n)
+&\le_{prob}C \\
+&=_{prob}(L(n)-1)+NB(L(n)-1, p)
+\end{aligned}
+$$
+因此$n$个元素列表中爬升到$L(n)$的代价$C(n)$的数学期望和方差为
+$$
+\begin{aligned}
+E(C(n)) 
+&\le (L(n)-1) + (L(n)-1)(1-p)/p \\
+&=(L(n)-1)(1+(1-p)/p) \\
+&=(L(n)-1)/p \\
+&=\frac{1}{p}log_{\frac{1}{p}}n-\frac{1}{p} \\
+&\lt \frac{1}{p}log_{\frac{1}{p}}n
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+Var(C(n))
+&\le (L(n)-1) + (L(n)-1)(1-p)/p^2 \\
+&= (L(n)-1)(1+(1-p)/p^2) \\
+&= (log_{\frac{1}{p}}n-1)(1+(1-p)/p^2) \\
+&= (log_{\frac{1}{p}}n-1)(1+1/p^2-1/p) \\
+&\lt log_\frac{1}{p}n
+\end{aligned}
+$$
+
+
+
+因为$1/p$是已知常数，因此跳跃表的搜索、插入和删除的时间复杂度都是$O(log n)$。
+
+
 
 ## 扩展
 
@@ -301,7 +355,7 @@ TODO
 
 首先，需要对数据结构重新进行定义，在前向指针中增加跨度相关的记录，并将其初始设置为0。此外，可以认为`NULL`在跳跃表中的位置永远是跳跃表的长度（从`0`开始），因此需要在跳跃表中记录总长度。
 
-本节中的代码参考自Redis的跳跃表实现[7], 为了与前面的代码风格保持一致，进行了适当的修改
+本节中的代码参考自Redis的跳跃表实现[8], 为了与前面的代码风格保持一致，进行了适当的修改
 ```c
 #define SKIP_LIST_KEY_TYPE     int
 #define SKIP_LIST_VALUE_TYPE   int
@@ -464,4 +518,5 @@ TODO
 4. Aragon, Cecilia & Seidel, Raimund. (1989). Randomized Search Trees. 540-545. 10.1109/SFCS.1989.63531. 
 5. Wikipedia contributors. (2022b, November 22). *Finger search*. Wikipedia. https://en.wikipedia.org/wiki/Finger_search
 6. Wikipedia contributors. (2022a, October 24). *Threaded binary tree*. Wikipedia. https://en.wikipedia.org/wiki/Threaded_binary_tree
-7. Redis contributors. *Redis ordered set implementation*. GitHub. https://github.com/redis/redis 
+7. Wikipedia contributors. (2023, January 4). *Negative binomial distribution*. Wikipedia. https://en.wikipedia.org/wiki/Negative_binomial_distribution
+8. Redis contributors. *Redis ordered set implementation*. GitHub. https://github.com/redis/redis 
