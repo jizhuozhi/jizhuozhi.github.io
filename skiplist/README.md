@@ -345,7 +345,17 @@ $$
 
 因为$1/p$是已知常数，因此跳跃表的搜索、插入和删除的时间复杂度都是$O(log n)$。
 
+### $P$的选择
 
+得到搜索代价为$E(C(n))\lt\frac{1}{p}log_{\frac{1}{p}}n$后，可以分析$p$的选择对$E(C(n))$的影响。为了更好的分析$p$对搜索时间的影响，需要对$E(C(n))$进行等价变换
+$$
+E(C(n))\lt\frac{1}{p}log_{\frac{1}{p}}n = \frac{ln(n)}{pln(\frac{1}{p})}
+$$
+不难看出，对于任意确定的$n$，$ln(n)$都是确定的，因此只需要分析$\frac{1}{pln(\frac{1}{p})}$的变化趋势就可以。为了更好的进行对比，以$p=\frac{1}{2}$为基础值进行标准化，Figure.11就是随着$p$的变化，搜索时间的变化趋势，其中$p=\frac{1}{e}$的点是搜索时间最好的点，但是二的整数次幂可以更好地进行随机级别的生成。
+
+<figure><img src="./Figure_11.png" stype="width:100%"/><figcaption align = "center">Figure.11 Normalized search times</figcaption></figure>
+
+而前面分析空间复杂度时也确定了$\frac{n}{1-p}$，空间用量随着$p$减小而降低，因此$p=\frac{1}{4}$是优于$p=\frac{1}{2}$的，这也是Redis中使用$p=0.25$而不是$p=0.5$的一个原因。
 
 ## 扩展
 
